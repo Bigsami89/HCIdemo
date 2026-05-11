@@ -43,7 +43,7 @@ export default function CoursesPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar isLoggedIn />
+      <Navbar />
 
       {/* Page header */}
       <section className="bg-navy py-14">

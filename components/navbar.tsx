@@ -103,13 +103,16 @@ export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "au
                   )}
                </div>
              ) : (
-               <div className="hidden md:flex items-center gap-3">
+               <div className="hidden md:flex items-center gap-4">
                  <Link href="/iniciar-sesion">
-                   <span className="text-sm font-medium text-uady-azul hover:text-uady-dorado transition-colors">Iniciar sesión</span>
+                   <Button variant="ghost" className="text-uady-azul hover:text-uady-dorado font-bold px-4">
+                     Iniciar sesión
+                   </Button>
                  </Link>
-                 <div className="w-[1px] h-4 bg-gray-200"></div>
                  <Link href="/registrarse">
-                   <span className="text-sm font-medium text-uady-azul hover:text-uady-dorado transition-colors">Registrarse</span>
+                   <Button className="bg-uady-azul text-white hover:bg-uady-dorado hover:text-uady-azul font-bold px-6 shadow-sm">
+                     Registrarse
+                   </Button>
                  </Link>
                </div>
              )}
@@ -138,23 +141,7 @@ export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "au
         </div>
       </nav>
 
-      {/* Tier 3: Blue - Secondary / Decorative */}
-      <div className="bg-uady-azul h-10 hidden md:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
-          <div className="flex items-center gap-6 text-[11px] font-medium text-white/90 uppercase tracking-wider">
-             <span className="flex items-center gap-2">
-               <span className="w-1.5 h-1.5 bg-uady-dorado rounded-full"></span>
-               Nuestra Universidad
-             </span>
-             <span className="flex items-center gap-2 text-white/60">
-               Oferta Educativa
-             </span>
-             <span className="flex items-center gap-2 text-white/60">
-               Vinculación
-             </span>
-          </div>
-        </div>
-      </div>
+
 
       {/* Mobile Menu */}
       {mobileOpen && (
@@ -176,7 +163,7 @@ export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "au
             {!authenticated && (
               <div className="flex flex-col gap-2 p-4">
                 <Link href="/registrarse" onClick={() => setMobileOpen(false)}>
-                  <Button className="w-full bg-uady-azul hover:bg-uady-azul/90 text-white font-bold">Registrarse</Button>
+                  <Button className="w-full bg-uady-azul hover:text-white hover:bg-uady-azul/90 text-white font-bold">Registrarse</Button>
                 </Link>
                 <Link href="/iniciar-sesion" onClick={() => setMobileOpen(false)}>
                   <Button variant="outline" className="w-full border-uady-azul text-uady-azul font-bold">Iniciar sesión</Button>

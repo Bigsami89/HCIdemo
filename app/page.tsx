@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowRight, CheckCircle, Users, BookOpen, Award, ChevronRight, Star, TrendingUp, Shield, Clock } from "lucide-react"
+import { ArrowRight, CheckCircle, Users, BookOpen, Award, ChevronRight, Star, TrendingUp, Shield, Clock, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -96,31 +96,64 @@ export default function HomePage() {
             </div>
 
             <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] text-balance mb-8">
-              Educación continua para profesionistas que <br/>
-              <span className="text-uady-dorado">lideran el futuro</span>
+              {isLoggedIn ? (
+                <>
+                  Educación continua para profesionistas que <br/>
+                  <span className="text-uady-dorado">lideran el futuro</span>
+                </>
+              ) : (
+                <>
+                  Tu próximo gran salto <br/>
+                  <span className="text-uady-dorado">comienza aquí</span>
+                </>
+              )}
             </h1>
 
             <p className="text-xl text-white/70 leading-relaxed mb-10 max-w-2xl font-light">
-              Programas de alto impacto diseñados por la Universidad Autónoma de Yucatán. Sin trámites
-              complejos — inicia tu especialización en minutos.
+              {isLoggedIn 
+                ? "Bienvenido de nuevo. Continúa tu especialización con los programas diseñados por la Universidad Autónoma de Yucatán."
+                : "Únete a la red de profesionistas más importante de la región. Crea tu cuenta en minutos y comienza tu proceso de inscripción 100% digital."
+              }
             </p>
 
             <div className="flex flex-wrap gap-5">
-              <Link href="/cursos">
-                <Button size="lg" className="bg-uady-dorado hover:bg-uady-dorado-80 text-uady-azul font-bold gap-2 h-14 px-10 text-lg shadow-[0_4px_20px_rgba(186,137,18,0.3)] transition-all">
-                  Explorar programas
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/#about">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/40 text-white hover:bg-white/10 h-14 px-10 text-lg transition-all"
-                >
-                  Conocer más
-                </Button>
-              </Link>
+              {!isLoggedIn ? (
+                <>
+                  <Link href="/registrarse">
+                    <Button size="lg" className="bg-uady-dorado hover:bg-uady-dorado-80 text-uady-azul font-bold gap-2 h-14 px-10 text-lg shadow-[0_4px_20px_rgba(186,137,18,0.3)] transition-all">
+                      Crear mi cuenta
+                      <UserPlus className="w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/cursos">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="bg-transparent border-white/40 text-white hover:text-white hover:bg-white/10 h-14 px-10 text-lg transition-all"
+                    >
+                      Ver catálogo
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/cursos">
+                    <Button size="lg" className="bg-uady-dorado hover:bg-uady-dorado-80 text-uady-azul font-bold gap-2 h-14 px-10 text-lg shadow-[0_4px_20px_rgba(186,137,18,0.3)] transition-all">
+                      Explorar programas
+                      <ArrowRight className="w-5 h-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/#about">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="bg-transparent border-white/40 text-white hover:text-white hover:bg-white/10 h-14 px-10 text-lg transition-all"
+                    >
+                      Conocer más
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -158,6 +191,43 @@ export default function HomePage() {
                 <p className="text-xs text-white/60 uppercase tracking-widest font-bold font-sans">{stat.label}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Highlighted CTA Card */}
+      <section className="py-12 relative z-20 -mt-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-uady-dorado rounded-3xl p-10 md:p-14 shadow-[0_20px_50px_rgba(186,137,18,0.4)] flex flex-col lg:flex-row items-center justify-between gap-10 border border-white/20 relative overflow-hidden group">
+            {/* Background pattern/glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+            
+            <div className="relative z-10 flex-1">
+              <div className="inline-flex items-center gap-2 bg-uady-azul/10 rounded-full px-4 py-1 mb-6">
+                 <span className="w-2 h-2 rounded-full bg-uady-azul animate-pulse"></span>
+                 <span className="text-uady-azul text-xs font-bold uppercase tracking-wider">Convocatoria Vigente</span>
+              </div>
+              <h2 className="text-uady-azul font-serif text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                ¿Buscas llevar tu carrera al <br className="hidden md:block" />
+                <span className="bg-uady-azul text-white px-2 py-1 rotate-1 inline-block mt-1">siguiente nivel?</span>
+              </h2>
+              <p className="text-uady-azul/80 text-xl max-w-xl font-medium leading-relaxed">
+                Nuestros programas de educación continua están diseñados para profesionales que buscan impacto real y networking de alto nivel.
+              </p>
+            </div>
+            
+            <div className="relative z-10 flex flex-col sm:flex-row gap-5 w-full lg:w-auto">
+              <Link href="/registrarse" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full bg-uady-azul text-white hover:bg-uady-azul/90 h-16 px-10 text-xl font-bold shadow-xl">
+                  Registrarse ahora
+                </Button>
+              </Link>
+              <Link href="/cursos" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full border-uady-azul/30 text-uady-azul hover:bg-white/20 h-16 px-10 text-xl font-bold transition-all">
+                  Explorar cursos
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -328,7 +398,7 @@ export default function HomePage() {
           </p>
           <div className="flex flex-wrap justify-center gap-6">
             <Link href={isLoggedIn ? "/mi-cuenta" : "/cursos"}>
-              <Button size="lg" className="bg-uady-azul text-white hover:bg-uady-azul/90 h-14 px-10 text-lg font-bold shadow-xl shadow-uady-azul/20 transition-all">
+              <Button size="lg" className="bg-uady-azul text-white hover:text-white hover:bg-uady-azul/90 h-14 px-10 text-lg font-bold shadow-xl shadow-uady-azul/20 transition-all">
                 {isLoggedIn ? "Ir a mi cuenta" : "Ver programas disponibles"}
               </Button>
             </Link>

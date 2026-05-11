@@ -39,7 +39,7 @@ export default function CourseDetailPage({ params }: CoursePageProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar isLoggedIn />
+      <Navbar />
 
       {/* Hero banner */}
       <section className="relative bg-navy overflow-hidden">
@@ -206,18 +206,11 @@ export default function CourseDetailPage({ params }: CoursePageProps) {
                   <p className="text-xs text-muted-foreground mt-1">Pago único · Financiamiento disponible</p>
                 </div>
 
-                <Link href={`/cursos/${course.id}/inscripcion`}>
+                <Link href={isLoggedIn ? `/cursos/${course.id}/inscripcion` : "/registrarse"}>
                   <Button size="lg" className="w-full bg-teal hover:bg-teal/90 text-white h-12 text-base font-semibold">
-                    Inscribirme ahora
+                    {isLoggedIn ? "Inscribirme ahora" : "Crea una cuenta para inscribirte"}
                   </Button>
                 </Link>
-                {!isLoggedIn && (
-                  <Link href="/registrarse">
-                    <Button size="lg" variant="outline" className="w-full h-11 text-foreground border-border">
-                      Crear cuenta gratuita
-                    </Button>
-                  </Link>
-                )}
 
                 <div className="border-t border-border pt-4 flex flex-col gap-3">
                   {[

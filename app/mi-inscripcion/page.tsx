@@ -109,10 +109,10 @@ const TIMELINE = [
 // Status options for demo switching
 const STATUS_OPTIONS: EnrollmentStatus[] = ["pending-docs", "under-review", "approved", "rejected"]
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
-export default function EnrollmentStatusPage() {
+function EnrollmentStatusContent() {
   const searchParams = useSearchParams()
   const courseIdParam = searchParams.get("id")
   
@@ -441,5 +441,13 @@ export default function EnrollmentStatusPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function EnrollmentStatusPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-navy" />}>
+      <EnrollmentStatusContent />
+    </Suspense>
   )
 }
