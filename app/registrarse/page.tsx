@@ -30,24 +30,43 @@ export default function RegisterPage() {
   const update = (key: string, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    // Simular guardado de sesión
-    localStorage.setItem("userLoggedIn", "true")
-    localStorage.setItem("userData", JSON.stringify({
-      name: `${form.nombre} ${form.apellidos}`,
-      email: form.email,
-      company: form.empresa || "Independiente",
-      initials: form.nombre[0] + (form.apellidos[0] || "")
-    }))
-
-    setTimeout(() => {
-      setLoading(false)
-      setStep("success")
-    }, 1500)
+  if (form.password !== form.confirmPassword) {
+    alert("Las contraseñas no coinciden")
+    return
   }
+
+  setLoading(true)
+
+  try {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: form.nombre,
+        apellidos: form.apellidos,
+        email: form.email,
+        password: form.password,
+        empresa: form.empresa,
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      alert(data.error || "Error al crear la cuenta")
+      return
+    }
+
+    setStep("success")
+  } catch (error) {
+    alert("Error de conexión. Intenta de nuevo.")
+  } finally {
+    setLoading(false)
+  }
+}
 
   if (step === "success") {
     return (
