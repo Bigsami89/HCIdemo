@@ -4,10 +4,10 @@ import Link from "next/link"
 import { Clock, Users, Star, Monitor, MapPin, CheckCircle, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { Course } from "@/lib/mock-data"
+import { useEffect, useState } from "react"
 
 interface CourseCardProps {
-  course: Course
+  course: any
   className?: string
 }
 
@@ -16,8 +16,6 @@ const modalityIcon = {
   Híbrida: Monitor,
   Presencial: MapPin,
 }
-
-import { useEffect, useState } from "react"
 
 export function CourseCard({ course, className }: CourseCardProps) {
   const [isEnrolled, setIsEnrolled] = useState(false)
@@ -41,7 +39,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
         <div className="relative h-44 bg-uady-azul/10 overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-            style={{ backgroundImage: `url(${course.image})` }}
+            style={{ backgroundImage: `url(${course.image ?? "/placeholder.jpg"})` }}
             aria-hidden="true"
           />
           <div className="absolute inset-0 bg-uady-azul/20 group-hover:bg-uady-azul/10 transition-colors" />
@@ -54,7 +52,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
           )}
           <div className="absolute bottom-3 left-3">
             <Badge variant="secondary" className="bg-uady-azul/90 text-white border-0 text-[10px] font-bold uppercase tracking-widest">
-              {course.category}
+              {course.category ?? "General"}
             </Badge>
           </div>
         </div>
@@ -64,31 +62,31 @@ export function CourseCard({ course, className }: CourseCardProps) {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
-              {course.duration}
+              {course.duration ?? "—"}
             </span>
             <span className="flex items-center gap-1">
               <ModalityIcon className="w-3.5 h-3.5" />
-              {course.modality}
+              {course.modality ?? "En línea"}
             </span>
             <span className="ml-auto bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs">
-              {course.level}
+              {course.level ?? "Todos"}
             </span>
           </div>
 
           <div className="flex-1">
             <h3 className="font-bold text-uady-azul leading-snug mb-2 group-hover:text-uady-dorado transition-colors line-clamp-2 text-lg">
-              {course.title}
+              {course.title ?? "Sin título"}
             </h3>
             <p className="text-sm text-uady-azul/60 line-clamp-2 leading-relaxed">
-              {course.subtitle}
+              {course.subtitle ?? ""}
             </p>
           </div>
 
           <div className="flex items-center gap-1 text-sm">
             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-            <span className="font-semibold text-foreground">{course.rating}</span>
+            <span className="font-semibold text-foreground">{course.rating ?? 0}</span>
             <span className="text-muted-foreground">
-              ({course.students.toLocaleString("es-MX")} alumnos)
+              ({(course.students ?? 0).toLocaleString("es-MX")} alumnos)
             </span>
           </div>
 
@@ -96,7 +94,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
             <div>
               <p className="text-[10px] uppercase tracking-widest font-bold text-uady-azul/40">Inversión</p>
               <p className="font-bold text-uady-azul text-xl">
-                ${course.price.toLocaleString("es-MX")}
+                ${(course.price ?? 0).toLocaleString("es-MX")}
                 <span className="text-xs font-medium text-uady-azul/40 italic ml-1">MXN</span>
               </p>
             </div>

@@ -1,31 +1,69 @@
 "use client"
 
-import { useState } from "react"
-import { Search, SlidersHorizontal, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, SlidersHorizontal, X, Loader2 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { CourseCard } from "@/components/course-card"
-import { courses } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+// IMPORTAMOS LA ACCIÓN QUE VA A SUPABASE
+import { getCursosAction } from "@/lib/actions" 
 
 const categories = ["Todos", "Finanzas", "Tecnología", "Derecho", "Marketing", "Recursos Humanos", "Operaciones"]
 const modalities = ["Todas", "En línea", "Híbrida", "Presencial"]
 const levels = ["Todos", "Intermedio", "Avanzado"]
 
 export default function CoursesPage() {
+  // ESTADOS PARA MANEJAR LOS CURSOS DE LA BASE DE DATOS Y LA CARGA
+  const [dbCourses, setDbCourses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Todos")
   const [selectedModality, setSelectedModality] = useState("Todas")
   const [selectedLevel, setSelectedLevel] = useState("Todos")
   const [showFilters, setShowFilters] = useState(false)
 
-  const filtered = courses.filter((c) => {
+  // NUEVO: EFECTO PARA TRAER LOS CURSOS CUANDO LA PANTALLA CARGUE
+  useEffect(() => {
+    async function cargarCursos() {
+      try {
+        const respuesta = await getCursosAction()
+        if (respuesta.success) {
+          // Adaptamos opcionalmente los datos de la DB por si hacen falta campos del layout viejo
+          const mapeados = respuesta.cursos.map((c: any) => ({
+            id: c.id,
+            title: c.titulo,
+            subtitle: c.descripcion || "",
+            description: c.descripcion || "",
+            category: c.category || "Tecnología",
+            modality: c.modality || "En línea",
+            level: c.level || "Todos",
+            duration: c.duracion || "4 semanas",
+            tags: c.titulo.split(" "),
+            image: c.imagenUrl || "/placeholder.jpg",
+            students: c.students ?? 0,   // ← agrega esto
+            rating: c.rating ?? 0,       // ← y esto por si acaso
+          }))
+          setDbCourses(mapeados)
+        }
+      } catch (error) {
+        console.error("Error al renderizar cursos:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    cargarCursos()
+  }, [])
+
+  // AHORA FILTRAMOS UTILIZANDO LOS CURSOS DE LA BASE DE DATOS (dbCourses)
+  const filtered = dbCourses.filter((c) => {
     const matchSearch =
       search === "" ||
       c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.subtitle.toLowerCase().includes(search.toLowerCase()) ||
-      c.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()))
+      c.tags.some((t: string) => t.toLowerCase().includes(search.toLowerCase()))
     const matchCat = selectedCategory === "Todos" || c.category === selectedCategory
     const matchMod = selectedModality === "Todas" || c.modality === selectedModality
     const matchLvl = selectedLevel === "Todos" || c.level === selectedLevel
@@ -53,7 +91,7 @@ export default function CoursesPage() {
             Diplomados y programas de educación continua
           </h1>
           <p className="text-white/60 max-w-2xl leading-relaxed">
-            {courses.length} programas disponibles para profesionales en activo. Elige el tuyo e inicia tu inscripción hoy.
+            {dbCourses.length} programas disponibles reales en Supabase para profesionales en activo.
           </p>
         </div>
       </section>
@@ -180,8 +218,13 @@ export default function CoursesPage() {
           ))}
         </div>
 
-        {/* Results */}
-        {filtered.length > 0 ? (
+        {/* Results / Loading section */}
+        {loading ? (
+          <div className="text-center py-20 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-navy" />
+            <p className="text-sm text-muted-foreground">Cargando cursos desde Supabase...</p>
+          </div>
+        ) : filtered.length > 0 ? (
           <>
             <p className="text-sm text-muted-foreground mb-6">
               {filtered.length} {filtered.length === 1 ? "programa encontrado" : "programas encontrados"}

@@ -5,9 +5,10 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { BookOpen, Eye, EyeOff, ArrowRight, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+// IMPORTAMOS LA ACCIÓN REAL DEL SERVIDOR
+import { loginUserAction } from "@/lib/actions" 
 
 const DEMO_EMAIL = "usuario@ejemplo.com"
-
 const DEMO_PASSWORD = "Demo1234"
 
 export default function LoginPage() {
@@ -16,34 +17,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  // Estado para pintar un mensaje si las credenciales están mal
+  const [errorMessage, setErrorMessage] = useState("") 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMessage("") // Limpiar errores previos
     
-    // Simular guardado de sesión
-    const registeredData = localStorage.getItem("userData")
-    const parsedData = registeredData ? JSON.parse(registeredData) : null
-    
-    // Si el email coincide con el registrado (insensible a mayúsculas y espacios), usamos esos datos
-    const userEmail = email.toLowerCase().trim()
-    const registeredEmail = parsedData?.email?.toLowerCase()?.trim()
-    
-    const userData = (parsedData && registeredEmail === userEmail)
-      ? parsedData
-      : {
-          name: parsedData?.name || "Usuario Demo",
-          email: email,
-          initials: parsedData?.initials || "UD"
-        }
+    // LLAMAMOS A NUESTRA BASE DE DATOS MEDIANTE LA ACCIÓN
+    const resultado = await loginUserAction(email, password)
 
-    localStorage.setItem("userLoggedIn", "true")
-    localStorage.setItem("userData", JSON.stringify(userData))
+    if (resultado.success && resultado.userData) {
+      // Guardamos en el almacenamiento local que ya inició sesión para tu layout
+      localStorage.setItem("userLoggedIn", "true")
+      localStorage.setItem("userData", JSON.stringify(resultado.userData))
 
-    setTimeout(() => {
-      setLoading(false)
+      // Redireccionamos a la pestaña de cursos
       router.push("/cursos")
-    }, 1200)
+    } else {
+      // Si la base de datos dice que está mal, mostramos el error en pantalla
+      setErrorMessage(resultado.error || "Error desconocido")
+      setLoading(false)
+    }
   }
 
   const fillDemo = () => {
@@ -68,6 +64,14 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+          
+          {/* Mensaje de Error Visible si falla la consulta */}
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-lg text-center font-medium">
+              {errorMessage}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
