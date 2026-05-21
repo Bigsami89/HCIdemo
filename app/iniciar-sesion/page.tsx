@@ -28,15 +28,10 @@ export default function LoginPage() {
     // LLAMAMOS A NUESTRA BASE DE DATOS MEDIANTE LA ACCIÓN
     const resultado = await loginUserAction(email, password)
 
-    if (resultado.success && resultado.userData) {
-      // Guardamos en el almacenamiento local que ya inició sesión para tu layout
-      localStorage.setItem("userLoggedIn", "true")
-      localStorage.setItem("userData", JSON.stringify(resultado.userData))
-
-      // Redireccionamos a la pestaña de cursos
+    if (resultado.success) {
+      router.refresh()
       router.push("/cursos")
     } else {
-      // Si la base de datos dice que está mal, mostramos el error en pantalla
       setErrorMessage(resultado.error || "Error desconocido")
       setLoading(false)
     }

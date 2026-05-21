@@ -12,6 +12,7 @@ import {
   BookOpen,
   Award,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -20,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { courses } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 import { use, useState, useEffect } from "react"
+import { checkSessionAction } from "@/lib/actions"
 
 interface CoursePageProps {
   params: Promise<{ id: string }>
@@ -28,10 +30,26 @@ interface CoursePageProps {
 export default function CourseDetailPage({ params }: CoursePageProps) {
   const { id } = use(params)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isEnrolled, setIsEnrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsLoggedIn(localStorage.getItem("userLoggedIn") === "true")
-  }, [])
+    setMounted(true)
+    
+    // 1. Validar sesión real mediante las cookies del servidor
+    async function verificarSesion() {
+      const sessionStatus = await checkSessionAction()
+      setIsLoggedIn(sessionStatus.authenticated)
+    }
+    verificarSesion()
+
+    // 2. Verificar si ya está inscrito localmente
+    const savedCourses = localStorage.getItem("my_courses")
+    if (savedCourses) {
+      const myCourses = JSON.parse(savedCourses)
+      setIsEnrolled(myCourses.some((c: any) => c.courseId === id))
+    }
+  }, [id])
 
   const course = courses.find((c) => c.id === id)
 
@@ -206,11 +224,26 @@ export default function CourseDetailPage({ params }: CoursePageProps) {
                   <p className="text-xs text-muted-foreground mt-1">Pago único · Financiamiento disponible</p>
                 </div>
 
-                <Link href={isLoggedIn ? `/cursos/${course.id}/inscripcion` : "/registrarse"}>
-                  <Button size="lg" className="w-full bg-teal hover:bg-teal/90 text-white h-12 text-base font-semibold">
-                    {isLoggedIn ? "Inscribirme ahora" : "Crea una cuenta para inscribirte"}
+                {mounted && isEnrolled ? (
+                  <Button className="w-full bg-uady-dorado text-white h-12 gap-2 cursor-default" disabled>
+                    <CheckCircle className="w-5 h-5" />
+                    Ya estás inscrito a este programa
                   </Button>
-                </Link>
+                ) : isLoggedIn ? (
+                  <Button asChild size="lg" className="w-full bg-teal hover:bg-teal-dark text-white h-12 gap-2 font-bold">
+                    <Link href={`/cursos/${course.id}/inscribirse`}>
+                      Inscribirse al curso
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button asChild size="lg" className="w-full bg-navy hover:bg-navy-light text-white h-12 gap-2 font-bold">
+                    <Link href="/registrarse">
+                      Registrarse en la plataforma
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
 
                 <div className="border-t border-border pt-4 flex flex-col gap-3">
                   {[

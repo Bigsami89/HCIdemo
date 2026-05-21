@@ -7,8 +7,7 @@ import { Footer } from "@/components/footer"
 import { CourseCard } from "@/components/course-card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-// IMPORTAMOS LA ACCIÓN QUE VA A SUPABASE
-import { getCursosAction } from "@/lib/actions" 
+import { getCursosAction, checkSessionAction } from "@/lib/actions"
 
 const categories = ["Todos", "Finanzas", "Tecnología", "Derecho", "Marketing", "Recursos Humanos", "Operaciones"]
 const modalities = ["Todas", "En línea", "Híbrida", "Presencial"]
@@ -18,6 +17,7 @@ export default function CoursesPage() {
   // ESTADOS PARA MANEJAR LOS CURSOS DE LA BASE DE DATOS Y LA CARGA
   const [dbCourses, setDbCourses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false)
 
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("Todos")
@@ -27,8 +27,11 @@ export default function CoursesPage() {
 
   // NUEVO: EFECTO PARA TRAER LOS CURSOS CUANDO LA PANTALLA CARGUE
   useEffect(() => {
-    async function cargarCursos() {
+    async function inicializarDatos() {
       try {
+        const sessionStatus = await checkSessionAction()
+        setIsUserLoggedIn(sessionStatus.authenticated)
+
         const respuesta = await getCursosAction()
         if (respuesta.success) {
           // Adaptamos opcionalmente los datos de la DB por si hacen falta campos del layout viejo
@@ -56,7 +59,7 @@ export default function CoursesPage() {
         setLoading(false)
       }
     }
-    cargarCursos()
+    inicializarDatos()
   }, [])
 
   // AHORA FILTRAMOS UTILIZANDO LOS CURSOS DE LA BASE DE DATOS (dbCourses)
@@ -233,7 +236,7 @@ export default function CoursesPage() {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard key={course.id} course={course} isLoggedIn={isUserLoggedIn}/>
               ))}
             </div>
           </>

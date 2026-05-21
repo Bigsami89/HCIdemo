@@ -5,6 +5,8 @@ import { useState } from "react"
 import { Menu, X, BookOpen, Bell, User, ChevronDown, LogOut, LayoutDashboard, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { checkSessionAction, logoutUserAction } from "@/lib/actions"
 
 const navLinks = [
   { label: "Cursos", href: "/cursos" },
@@ -13,11 +15,7 @@ const navLinks = [
 ]
 
 // Mock: simula usuario para desarrollo
-const MOCK_USER = {
-  name: "Usuario Demo",
-  email: "usuario@ejemplo.com",
-  initials: "U",
-}
+
 
 interface NavbarProps {
   variant?: "transparent" | "solid"
@@ -28,29 +26,48 @@ interface NavbarProps {
 import { useEffect } from "react"
 
 export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "auto" }: NavbarProps) {
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [auth, setAuth] = useState({ loggedIn: false, user: MOCK_USER })
+  const [auth, setAuth] = useState({ loggedIn: false, user: { name: "", email: "", initials: "" } })
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const loggedIn = localStorage.getItem("userLoggedIn") === "true"
-    const userData = localStorage.getItem("userData")
-    if (loggedIn && userData) {
-      setAuth({ loggedIn: true, user: JSON.parse(userData) })
+    
+    async function sincronizarUsuario() {
+      // Validamos si hay cookie de sesión activa en Supabase
+      const sessionStatus = await checkSessionAction()
+      
+      if (sessionStatus.authenticated && sessionStatus.userData) {
+        setAuth({
+          loggedIn: true,
+          user: {
+            name: sessionStatus.userData.name,
+            email: sessionStatus.userData.email,
+            initials: sessionStatus.userData.initials
+          }
+        })
+      } else {
+        setAuth({ loggedIn: false, user: { name: "", email: "", initials: "" } })
+      }
     }
+    
+    sincronizarUsuario()
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutUserAction()
     localStorage.removeItem("userLoggedIn")
     localStorage.removeItem("userData")
-    setAuth({ loggedIn: false, user: MOCK_USER })
+    setAuth({ loggedIn: false, user: { name: "", email: "", initials: "" } })
+    setUserMenuOpen(false)
+    router.refresh()
+    router.push("/")
   }
 
   const isTransparent = variant === "transparent"
-  const authenticated = mounted && (isLoggedIn === "auto" ? auth.loggedIn || showStatus : isLoggedIn)
-  const currentUser = auth.loggedIn ? auth.user : MOCK_USER
+  const authenticated = auth.loggedIn
 
   return (
     <header className="w-full z-50 flex flex-col font-sans">
@@ -79,7 +96,7 @@ export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "au
                     className="flex items-center gap-2 group"
                   >
                     <div className="w-8 h-8 rounded-full bg-uady-azul flex items-center justify-center text-white text-xs font-bold ring-2 ring-offset-2 ring-uady-dorado/20 group-hover:ring-uady-dorado/40 transition-all">
-                      {currentUser.initials}
+                      {auth.user.initials}
                     </div>
                     <ChevronDown className={cn("w-4 h-4 text-uady-azul transition-transform", userMenuOpen && "rotate-180")} />
                   </button>
@@ -87,8 +104,8 @@ export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "au
                   {userMenuOpen && (
                     <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-lg shadow-xl py-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="px-4 py-3 border-b border-gray-50">
-                        <p className="text-sm font-semibold text-gray-900">{currentUser.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{currentUser.email}</p>
+                        <p className="text-sm font-semibold text-gray-900">{auth.user.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{auth.user.email}</p>
                       </div>
                       <Link href="/mi-cuenta" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
                         <LayoutDashboard className="w-4 h-4 text-uady-dorado" /> Mi perfil y cursos
@@ -140,8 +157,6 @@ export function Navbar({ variant = "solid", showStatus = false, isLoggedIn = "au
           </div>
         </div>
       </nav>
-
-
 
       {/* Mobile Menu */}
       {mobileOpen && (

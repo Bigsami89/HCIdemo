@@ -9,6 +9,7 @@ import type { Course } from "@/lib/mock-data"
 interface CourseCardProps {
   course: Course
   className?: string
+  isLoggedIn: boolean
 }
 
 const modalityIcon = {
@@ -19,7 +20,7 @@ const modalityIcon = {
 
 import { useEffect, useState } from "react"
 
-export function CourseCard({ course, className }: CourseCardProps) {
+export function CourseCard({ course, className, isLoggedIn }: CourseCardProps) {
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -112,6 +113,31 @@ export function CourseCard({ course, className }: CourseCardProps) {
                 </span>
               )}
             </div>
+          </div>
+        </div>
+        {/* Footer de la tarjeta */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-50 px-5 pb-5">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-uady-azul/40">Inversión</p>
+            <p className="font-bold text-uady-azul text-xl">
+              ${course.price?.toLocaleString("es-MX") ?? 0}
+              <span className="text-xs font-medium text-uady-azul/40 italic ml-1">MXN</span>
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-end">
+            {mounted && isEnrolled ? (
+              <span className="text-[10px] font-bold text-uady-dorado uppercase tracking-wider flex items-center gap-1.5 bg-uady-dorado/5 px-3 py-1.5 rounded-full border border-uady-dorado/20">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Inscrito
+              </span>
+            ) : (
+              <span className="text-xs font-bold text-uady-azul group-hover:text-uady-dorado flex items-center gap-2 transition-colors">
+                {/* 👈 CONDICIONAL DE INICIO DE SESIÓN INTEGRADA */}
+                {isLoggedIn ? "Inscribirse al curso" : "Registrarse a la plataforma"}
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            )}
           </div>
         </div>
       </article>
