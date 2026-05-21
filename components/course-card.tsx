@@ -96,7 +96,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
             <div>
               <p className="text-[10px] uppercase tracking-widest font-bold text-uady-azul/40">Inversión</p>
               <p className="font-bold text-uady-azul text-xl">
-                ${course.price.toLocaleString("es-MX")}
+                ${course.price?.toLocaleString("es-MX") ?? 0}
                 <span className="text-xs font-medium text-uady-azul/40 italic ml-1">MXN</span>
               </p>
             </div>

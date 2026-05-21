@@ -20,5 +20,33 @@ model Usuario {
   password  String
   empresa   String
   createdAt DateTime @default(now())
+  cursos    Curso[]
 }
 
+model Curso {
+  id              String   @id @default(cuid())
+  title           String
+  subtitle        String
+  category        String
+  duration        String
+  modality        String
+  sessions        Int
+  price           Float
+  rating          Float    @default(0)
+  students        Int      @default(0)
+  instructor      String
+  instructorTitle String
+  level           String
+  tags            String[]
+  description     String
+  objectives      String[]
+  syllabus        Json
+  startDate       String
+  schedule        String
+  image           String
+  featured        Boolean  @default(false)
+  badge           String?
+  createdAt       DateTime @default(now())
+  usuario         Usuario? @relation(fields: [usuarioId], references: [id])
+  usuarioId       String?
+}
