@@ -20,7 +20,7 @@ model Usuario {
   password  String
   empresa   String
   createdAt DateTime @default(now())
-  cursos    Curso[]
+  inscripciones Inscripcion[]
 }
 
 model Curso {
@@ -47,6 +47,19 @@ model Curso {
   featured        Boolean  @default(false)
   badge           String?
   createdAt       DateTime @default(now())
-  usuario         Usuario? @relation(fields: [usuarioId], references: [id])
-  usuarioId       String?
+  inscripciones   Inscripcion[]
+}
+
+model Inscripcion {
+  id               String   @id @default(cuid())
+  usuarioId        String
+  cursoId          String
+  status           String   @default("pending-docs")
+  paymentConfirmed Boolean  @default(false)
+  amount           Float    @default(0)
+  submittedAt      DateTime @default(now())
+  reviewedAt       DateTime?
+  documents        Json     @default("[]")
+  usuario          Usuario  @relation(fields: [usuarioId], references: [id])
+  curso            Curso    @relation(fields: [cursoId], references: [id])
 }

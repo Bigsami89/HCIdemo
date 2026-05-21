@@ -25,86 +25,43 @@ import {
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { courses } from "@/lib/mock-data"
 import type { EnrollmentStatus } from "@/lib/mock-data"
+import { getUserDashboardAction } from "@/lib/actions"
+import { useEffect } from "react"
 
 // --- Mock data fallback ---
-const MOCK_USER = {
-  name: "Usuario",
-  email: "usuario@ejemplo.com",
-  phone: "No proporcionado",
-  company: "Independiente",
-  city: "No proporcionada",
-  degree: "No proporcionado",
-  memberSince: "2025",
-  initials: "U",
-}
 
 interface EnrolledCourse {
+  id: string
   courseId: string
   courseName: string
   category: string
   image: string
   startDate: string
-  status: EnrollmentStatus
+  status: string // pending-docs, under-review, approved, rejected
   paymentConfirmed: boolean
   amount: number
   submittedAt: string
-  progress: number // 0-100, relevant when approved
+  progress: number
   documentsAccepted: number
   documentsTotal: number
+  documents: any[]
 }
 
-const ENROLLED_COURSES: EnrolledCourse[] = [
-  {
-    courseId: "diplomado-finanzas",
-    courseName: "Diplomado en Finanzas Corporativas",
-    category: "Finanzas",
-    image: "/images/course-finance.jpg",
-    startDate: "14 de abril, 2025",
-    status: "under-review",
-    paymentConfirmed: true,
-    amount: 18500,
-    submittedAt: "15 de marzo, 2025",
-    progress: 0,
-    documentsAccepted: 2,
-    documentsTotal: 4,
-  },
-  {
-    courseId: "diplomado-marketing-estrategico",
-    courseName: "Diplomado en Marketing Estratégico",
-    category: "Marketing",
-    image: "/images/course-marketing.jpg",
-    startDate: "21 de abril, 2025",
-    status: "approved",
-    paymentConfirmed: true,
-    amount: 14500,
-    submittedAt: "10 de febrero, 2025",
-    progress: 35,
-    documentsAccepted: 4,
-    documentsTotal: 4,
-  },
-  {
-    courseId: "diplomado-recursos-humanos",
-    courseName: "Diplomado en Gestión Estratégica de Talento",
-    category: "Recursos Humanos",
-    image: "/images/course-hr.jpg",
-    startDate: "5 de mayo, 2025",
-    status: "pending-docs",
-    paymentConfirmed: false,
-    amount: 11900,
-    submittedAt: "20 de marzo, 2025",
-    progress: 0,
-    documentsAccepted: 1,
-    documentsTotal: 4,
-  },
-]
+interface UserProfile {
+  name: string
+  email: string
+  company: string
+  memberSince: string
+  initials: string
+  phone?: string // Opcionales en DB pero útiles para la UI
+  city?: string
+  degree?: string
+}
 
-const STATUS_CONFIG: Record<
-  EnrollmentStatus,
-  { label: string; icon: React.ElementType; color: string; bg: string; border: string }
+const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; border: string }
 > = {
   "pending-docs": {
     label: "Documentos pendientes",
@@ -139,41 +96,74 @@ const STATUS_CONFIG: Record<
 const TABS = ["Mis cursos", "Mi perfil", "Documentos y pagos"] as const
 type Tab = (typeof TABS)[number]
 
-import { useEffect } from "react"
-
 export default function MiCuentaPage() {
   const [activeTab, setActiveTab] = useState<Tab>("Mis cursos")
-  const [user, setUser] = useState(MOCK_USER)
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>(ENROLLED_COURSES)
-  const [mounted, setMounted] = useState(false)
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setMounted(true)
-    const userData = localStorage.getItem("userData")
-    if (userData) {
-      const parsedUser = JSON.parse(userData)
-      setUser({ ...MOCK_USER, ...parsedUser })
+    async function loadDashboardData() {
+      try {
+        const response = await getUserDashboardAction()
+        
+        if (response.success && response.user) {
+          setUser(response.user)
+          setEnrolledCourses(response.enrolledCourses || [])
+        } else {
+          setError(response.error || "No se pudo cargar la sesión.")
+        }
+      } catch (err) {
+        console.error("Error al conectar con las Server Actions:", err)
+        setError("Error de red o del servidor al intentar conectar.")
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const savedCourses = localStorage.getItem("my_courses")
-    if (savedCourses) {
-      setEnrolledCourses(JSON.parse(savedCourses))
-    }
+    loadDashboardData()
   }, [])
 
-  if (!mounted) {
-    return <div className="min-h-screen bg-background" />
+  // Estado de carga inicial
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-background">
+        <RefreshCw className="w-8 h-8 text-teal animate-spin mb-2" />
+        <p className="text-sm text-muted-foreground">Cargando tu cuenta...</p>
+      </div>
+    )
   }
 
-  const totalInvested = enrolledCourses.filter((c) => c.paymentConfirmed).reduce(
-    (acc, c) => acc + c.amount,
-    0
-  )
+  // Estado de error o sesión no encontrada
+  if (error || !user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar isLoggedIn={false} />
+        <div className="flex-1 flex flex-col justify-center items-center p-4">
+          <AlertCircle className="w-12 h-12 text-destructive mb-3" />
+          <h2 className="text-xl font-bold mb-1">Acceso Denegado / Error</h2>
+          <p className="text-muted-foreground text-center max-w-md mb-4">
+            {error || "Inicia sesión para poder visualizar los datos de tu cuenta."}
+          </p>
+          <Link href="/login">
+            <Button className="bg-teal text-white">Ir al Login</Button>
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  // Cálculos dinámicos con datos reales de la DB
+  const totalInvested = enrolledCourses
+    .filter((c) => c.paymentConfirmed)
+    .reduce((acc, c) => acc + c.amount, 0)
+    
   const approvedCount = enrolledCourses.filter((c) => c.status === "approved").length
   const pendingCount = enrolledCourses.filter(
     (c) => c.status === "under-review" || c.status === "pending-docs"
   ).length
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar isLoggedIn />
@@ -284,8 +274,8 @@ export default function MiCuentaPage() {
             {/* Course cards */}
             <div className="flex flex-col gap-4">
               {enrolledCourses.map((enrollment) => {
-                const config = STATUS_CONFIG[enrollment.status]
-                const StatusIcon = config.icon
+                const config = STATUS_CONFIG[enrollment.status] || STATUS_CONFIG["pending-docs"]
+                const StatusIcon = config.icon  
                 const course = courses.find((c) => c.id === enrollment.courseId)
 
                 return (
