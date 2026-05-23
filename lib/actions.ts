@@ -120,20 +120,58 @@ export async function getInscripcionAction(cursoId?: string) {
 
     const sessionData = JSON.parse(session.value)
 
-    const inscripcion = await prisma.inscripcion.findFirst({
-      where: {
-        usuarioId: sessionData.id,
-        ...(cursoId ? { cursoId } : {}),
+    const queryConditions: any = { usuarioId: sessionData.id }
+    if (cursoId) {
+      queryConditions.cursoId = cursoId
+    }
+
+    const ins = await prisma.inscripcion.findFirst({
+      where: queryConditions,
+      include: { 
+        curso: true,
+        usuario: true 
       },
-      include: { curso: true },
       orderBy: { submittedAt: "desc" },
     })
 
-    if (!inscripcion) return { success: false, error: "No se encontró inscripción." }
-    return { success: true, inscripcion }
+    if (!ins) return { success: false, error: "No se encontró ninguna inscripción activa para este programa." }
+
+    // Procesamiento y parseo seguro de los documentos guardados en formato JSON
+    let docsArray = []
+    try {
+      docsArray = typeof ins.documents === "string" ? JSON.parse(ins.documents) : (ins.documents as any[]) || []
+    } catch {
+      docsArray = []
+    }
+
+    if (!Array.isArray(docsArray)) {
+      docsArray = []
+    }
+
+    const acceptedCount = docsArray.filter((d: any) => d && (d.status === "accepted" || d.status === "approved")).length
+
+    // Mapeo unificado compatible con la interfaz del Frontend
+    const mappedEnrollment = {
+      id: ins.id,
+      courseId: ins.curso.id,
+      courseName: ins.curso.title,
+      category: ins.curso.category,
+      image: ins.curso.image,
+      startDate: ins.curso.startDate,
+      status: ins.status, // pending-docs, under-review, approved, rejected
+      paymentConfirmed: ins.paymentConfirmed,
+      amount: ins.amount,
+      submittedAt: ins.submittedAt.toLocaleDateString("es-MX", { day: 'numeric', month: 'short', year: 'numeric' }),
+      documentsAccepted: acceptedCount,
+      documentsTotal: docsArray.length,
+      documents: docsArray,
+      email: ins.usuario.email
+    }
+
+    return { success: true, enrollment: mappedEnrollment }
   } catch (error) {
     console.error("Error obteniendo inscripción:", error)
-    return { success: false, error: "Error del servidor." }
+    return { success: false, error: "Error de sincronización con Supabase al buscar el trámite." }
   }
 }
 
